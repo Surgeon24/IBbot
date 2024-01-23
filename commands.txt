@@ -1,0 +1,3 @@
+conda activate myenv
+cd "project folder"
+python "filename"
