@@ -7,6 +7,9 @@ from ibapi.contract import Contract
 import threading
 import time
 
+import socket
+import threading
+
 """
 Класс обработчик событий (wrapper). 
 Он определяет методы для обработки событий:
@@ -139,16 +142,14 @@ class Bot:
 
             time.sleep(2)
 
-
-    """
-    Простая торговая стратегия на основе ценовой истории.
-    Аргументы:
-    - price_history: список последних цен закрытия, где цены упорядочены по возрастанию времени.
-    Возвращает:
-    - action: действие, которое необходимо выполнить (BUY - покупка, SELL - продажа, HOLD - держать позицию).
-    """
     def strategy1(self, price_history):
-
+        """
+        Простая торговая стратегия на основе ценовой истории.
+        Аргументы:
+        - price_history: список последних цен закрытия, где цены упорядочены по возрастанию времени.
+        Возвращает:
+        - action: действие, которое необходимо выполнить (BUY - покупка, SELL - продажа, HOLD - держать позицию).
+        """
         # Проверяем, что у нас есть достаточно данных для анализа
         if len(price_history) < 4:
             print("length of history price = ", len(price_history))
@@ -163,5 +164,54 @@ class Bot:
             return "SELL"
         return "HOLD"
 
+"""
+Класс - торговый бот с сокет соединением, расширяющий класс Bot.
+"""
+class SocketBot(Bot):
+    def __init__(self):
+        self.symbol = None
+        self.strategy = None
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind(('127.0.0.1', 12345))  #привязка к адресу и порту
+        self.server_socket.listen(1)  #прослушивание входящих соединений
+
+        #отдельный поток для принятия данных по сокету
+        socket_thread = threading.Thread(target=self.accept_connections)
+        socket_thread.start()
+
+        super().__init__()
+
+    def accept_connections(self):
+        print("SocketBot is waiting for connections...")
+        client_socket, _ = self.server_socket.accept()  # прием соединения
+        print("SocketBot connected!")
+
+        while True:
+            data = client_socket.recv(1024).decode()  #данные от клиента
+            if not data:
+                break
+            symbol, strategy = data.split(',')  #парсинг данных
+            self.symbol = symbol
+            self.strategy = strategy
+            print(f"Received symbol: {symbol}, strategy: {strategy}")
+
+        client_socket.close()
+
+    def runLoop(self):
+        # Изменяем метод runLoop() так, чтобы он использовал symbol и strategy из сокета
+        if self.symbol is None or self.strategy is None:
+            print("Symbol or strategy not set properly.")
+            return
+
+        self.contract.symbol = self.symbol.upper()
+        self.strategy = self.strategy
+        # Другие операции по инициализации
+
+        # Далее продолжаем работу как обычно
+        super().runLoop()
+
+# Start the SocketBot
+socket_bot = SocketBot()
+
 # Start the Bot 
-bot = Bot()
+# bot = Bot()
