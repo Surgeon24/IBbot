@@ -37,6 +37,10 @@ class IBApi(EWrapper, EClient):
             self.bot.onPriceUpdate(price)
             self.price_history.append(price)
 
+    def nextValidId(self, orderId: int):
+        super().nextValidId(orderId)
+        self.nextOrderId = orderId
+        print('The next valid order id is: ', self.nextOrderId)
 
 """
 Класс - торговый бот. В методе __init__() инициализируется объект IBApi, 
@@ -54,10 +58,19 @@ class Bot:
 
     def __init__(self):
         self.ib = IBApi(self)
+        self.ib.nextOrderId = None
         ibThread = threading.Thread(target=self.runLoop, daemon=True)
         self.isRunning = True
         ibThread.start()
         time.sleep(1)
+
+        while True:
+            if isinstance(self.ib.nextOrderId, int):
+                print('connected')
+                break
+            else:
+                print('waiting for connection')
+                time.sleep(1)
 
         # Create IB contract object
         print("Bot have been created. Create the contract you want to trade.")
@@ -99,13 +112,16 @@ class Bot:
         #Create order object
         order = Order()
         order.action = action
-        order.totalQuantity = 100
+        order.totalQuantity = 10
         order.orderType = 'MKT'
-
+        order.eTradeOnly = False
+        order.firmQuoteOnly = False
 
         #Place order
-        self.ib.placeOrder(self.tickerId, self.contract, order)
-        self.tickerId +=1
+        print("order id: ", self.ib.nextOrderId)
+        self.ib.placeOrder(self.ib.nextOrderId, self.contract, order)
+        self.ib.nextOrderId += 1
+        print("order was placed. Next order id will be ", self.ib.nextOrderId)
 
     def runLoop(self):
         self.ib.connect("127.0.0.1", 7497, 1)
@@ -118,11 +134,13 @@ class Bot:
         if self.strategy is None:
             print("Trading strategy doesn't set properly.")
             return
-
         while True:
+            print("\n\nrunStrategyLoop cycle...")
             # Получаем текущую цену бумаги
             self.requestMarketData()
-            current_price = self.ib.price_history
+            print("tickerId:", self.tickerId)
+            print("nextOrderId:", self.ib.nextOrderId)
+            # current_price = self.ib.price_history
 
             #при добавлении новых стратегий здесь должен быть реализован переключатель
             #На данном этапе у нас есть только одна стратегия, которую мы и применяем
@@ -137,7 +155,7 @@ class Bot:
             else:
                 print("unresolved action!")
 
-            time.sleep(2)
+            time.sleep(3)
 
 
     """
