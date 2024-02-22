@@ -1,53 +1,54 @@
-import ibapi
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
-
 from ibapi.contract import Contract
-from ibapi.order import *
-import threading
-import time
+from ibapi.order import Order
 
-
-# Class for connection
 class IBApi(EWrapper, EClient):
-    def __init__(self):
-        EClient.__init__(self, self) 
-    # Listen for rt bars
-    def realtimeBar(self, reqId, time, open_, high, low, close, volume, wap, count):
-        super().realtimeBar(reqId, time, open_, high, low, close, volume, wap, count)
-        try:
-            bot.on_bar_update(reqId, time, open_, high, low, close, volume, wap, count)
-        except Exception as e:
-            print(e)
+    def __init__(self, bot):
+        EClient.__init__(self, self)
+        self.is_connected = False
+        self.bot = bot
+        self.price_history = []
+
+    def connect(self, host, port, clientId):
+        super().connect(host, port, clientId)
+        self.is_connected = True
+
+    def disconnect(self):
+        super().disconnect()
+        self.is_connected = False
+
     def error(self, id, errorCode, errorMsg):
         print(errorCode)
         print(errorMsg)
-# Class for bot logic
-class Bot:
-    ib = None
-    def __init__(self):
-        self.ib = IBApi()
-        self.ib.connect("127.0.0.1", 7497, 1)
-        ib_thread = threading.Thread(target=self.run_loop, daemon=True)
-        ib_thread.start()
-        time.sleep(1)
-        symbol = input("Enter the symbol you whant to trade: ")
-        # Create our IB contract object
+
+    def tickPrice(self, reqId, tickType, price, attrib):
+        super().tickPrice(reqId, tickType, price, attrib)
+        if tickType == 4:  # 4 corresponds to "Last Price" tick type
+            self.bot.onPriceUpdate(price)
+            self.price_history.append(price)
+
+    def nextValidId(self, orderId: int):
+        super().nextValidId(orderId)
+        self.nextOrderId = orderId
+        print('The next valid order id is: ', self.nextOrderId)
+
+    def createContract(self, symbol):
         contract = Contract()
-        contract.symbol = symbol.upper()
+        contract.symbol = symbol
         contract.secType = "STK"
         contract.exchange = "SMART"
         contract.currency = "USD"
-        # Request Market Data
-        self.ib.reqRealTimeBars(0, contract, 5, "TRADES", 1, [])
+        return contract
 
-
-    # listen to socket in separate thread    
-    def run_loop(self):
-        self.ib.run()
-    # pass rt bar data back to our  bot object
-    def on_bar_update(self, reqId, time, open_, high, low, close, volume, wap, count):
-        print(close)
-
-# Start the Bot
-bot = Bot()
+    def sendOrder(self, contract, action):
+        #Create order object
+        order = Order()
+        order.action = action
+        order.totalQuantity = 10
+        order.orderType = 'MKT'
+        order.eTradeOnly = False
+        order.firmQuoteOnly = False
+        #Place order
+        self.placeOrder(self.nextOrderId, contract, order)
+        return True
