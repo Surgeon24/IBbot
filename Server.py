@@ -1,5 +1,9 @@
+import ibapi
+from Bot import Bot
 import socket
 import sys
+import threading
+import time
  
 
 HOST = '192.168.56.1'  # my localhost
@@ -16,13 +20,19 @@ except socket.error as err:
 
 print('Socket bind success!')
 s.listen(10)
-print('Socket is now listening')
 
+# print("starting the bot in the paralel thread")
+# ibThread = threading.Thread(bot=Bot(), daemon=True)
+# ibThread.start()
+# time.sleep(1)
+
+print('Socket is now waiting for the connection')
 while True:
     conn, addr = s.accept()
     print('Connected with ', addr)
     data = conn.recv(64).decode()
-    print('Received:', data) 
+    print('Received:', data)
+
     conn.close()
 
 s.close()
