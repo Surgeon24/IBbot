@@ -10,13 +10,10 @@ class StrategyAdapter:
     def runStrategy(self, id, price_history):
         print("strat:", id)
         match id:
-            case 1:
+            case '1':
                 return self.strategy1(price_history)
-            case 2:
-                print("case 2")
-                tmp = self.strategy2(price_history)
-                print(tmp)
-                return tmp
+            case '2':
+                return self.strategy2(price_history)
             case _:
                 print("Unhandled id:", id)
 
@@ -42,8 +39,8 @@ class StrategyAdapter:
             return "HOLD"  # Если данных недостаточно, держим позицию
         # Получаем последние две цены закрытия
         last_two_prices = price_history[-2:]
-        if (last_two_prices[i] < last_two_prices[i + 1]):
+        if (last_two_prices[0] < last_two_prices[1]):
             return "HOLD"
-        if (last_two_prices[i] > last_two_prices[i + 1]):
+        if (last_two_prices[0] > last_two_prices[1]):
             return "SELL"
         return "HOLD"
