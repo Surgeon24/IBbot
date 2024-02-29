@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import json
+import json
  
 
 HOST = '192.168.56.1'  # my localhost
@@ -22,14 +23,10 @@ except socket.error as err:
 print('Socket bind success!')
 s.listen(10)
 
-# print("starting the bot in the paralel thread")
-# ibThread = threading.Thread(bot=Bot(), daemon=True)
-# ibThread.start()
-# time.sleep(1)
-
-print('Socket is now waiting for the connection')
-isRunning = True
+print("starting the bot in the paralel thread")
 bot = Bot()
+isRunning = True
+print('Socket is now waiting for the connection')
 while True:
     conn, addr = s.accept()
     print('Connected with', addr)

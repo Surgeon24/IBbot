@@ -97,3 +97,22 @@ class Bot:
                 print("unresolved action:", action)
 
             time.sleep(3)
+        
+    # def createContractAndRunLoop(self, symbol, strategy):
+    #     print('symbol: ', symbol, " and strategy: ", strategy)
+    #     # Create IB contract object
+    #     print("Bot have been created. Create the contract you want to trade.")
+    #     self.symbol = symbol
+    #     self.contract = self.ib.createContract(self.symbol)
+    #     self.strategyId = strategy
+    #     print("Contract was created.")
+
+    #     # Switch market data type to delayed (Type 3)
+    #     self.ib.reqMarketDataType(3)
+
+    #     self.runStrategyLoop()
+
+    #     # Ожидание завершения работы ibThread
+    #     self.isRunning = False
+    #     self.ibThread.join()
+    #         time.sleep(3)
