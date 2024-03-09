@@ -29,11 +29,13 @@ class Bot:
                 print('waiting for connection')
                 time.sleep(1)
 
+
+    def createContractAndRunLoop(self, symbol, strategy, id):
         # Create IB contract object
-        print("Bot have been created. Create the contract you want to trade.")
-        self.symbol = input("Enter the symbol you want to trade: ")
+        print(f"Bot {id} have been created. Create the contract you want to trade.")
+        self.symbol = symbol
         self.contract = self.ib.createContract(self.symbol)
-        self.strategyId = input("Enter id of strategy you want to trade (only 1 is avaliable right now):")
+        self.strategyId = strategy
         print("Contract was created.")
 
         # Switch market data type to delayed (Type 3)
@@ -43,7 +45,7 @@ class Bot:
 
         # Ожидание завершения работы ibThread
         self.isRunning = False
-        ibThread.join()
+        self.ibThread.join()
 
     def requestMarketData(self):
         if not self.marketDataRequested:
@@ -94,4 +96,15 @@ class Bot:
             else:
                 print("unresolved action:", action)
 
-            time.sleep(3)
+            time.sleep(7)
+    
+
+    def getAccountData(self):
+        print("getAccountData placeholder")
+        info = self.ib.accountSummary(9001, "All", "$LEDGER", "StockValue", "USD")
+        print(info)
+        # self.ib.reqAccountSummary(9001, "All", "NetLiquidation,SMA,StockValue")
+
+    def runBot(self):
+        data_thread = threading.Thread(target=createContractAndRunLoop, args=(symbol, strategy))
+        data_thread.start()
