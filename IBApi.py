@@ -31,7 +31,7 @@ class IBApi(EWrapper, EClient):
     def nextValidId(self, orderId: int):
         super().nextValidId(orderId)
         self.nextOrderId = orderId
-        print('The next valid order id is: ', self.nextOrderId)
+        # print('The next valid order id is: ', self.nextOrderId)
 
     def createContract(self, symbol):
         contract = Contract()
