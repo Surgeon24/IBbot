@@ -1,10 +1,9 @@
+import asyncio
 import threading
-import time
-import _asyncio
 from IBApi import IBApi
 from Strategies import StrategyAdapter
 
-class Bot:
+class BotAsync:
     ib = None
     strat = None
     marketDataRequested = False
@@ -18,10 +17,12 @@ class Bot:
         self.strat = StrategyAdapter()
         self.ib.nextOrderId = None
         self.isRunning = True
-        # ibThread = threading.Thread(target=self.runLoop, daemon=True)
-        # ibThread.start()
-        # time.sleep(1)
-        
+
+        # Запускаем основной асинхронный метод в отдельной задаче
+        asyncio.create_task(self._async_init())  # Запускаем инициализацию как асинхронную задачу
+
+    async def _async_init(self):
+        await asyncio.sleep(1)  # Асинхронная пауза
         print("_init_")
         while self.isRunning:
             if isinstance(self.ib.nextOrderId, int):
@@ -29,12 +30,16 @@ class Bot:
                 break
             else:
                 print('waiting for connection (there is no nextOrderId)')
-                time.sleep(2)
-        print("end of _init_")
+                await asyncio.sleep(2)
 
+    def start_contract_loop(self, symbol, strategy, id):
+        # Эта функция будет работать в отдельном потоке
+        # Для асинхронного выполнения используем asyncio.run_coroutine_threadsafe
+        loop = asyncio.get_event_loop()
+        future = asyncio.run_coroutine_threadsafe(self.createContractAndRunLoop(symbol, strategy, id), loop)
+        future.result()  # Ожидаем завершения выполнения
 
-    def createContractAndRunLoop(self, symbol, strategy, id):
-        # Create IB contract object
+    async def createContractAndRunLoop(self, symbol, strategy, id):
         print(f"Bot {id} has been created. Creating the contract...")
         self.symbol = symbol
         self.contract = self.ib.createContract(self.symbol)
@@ -43,15 +48,16 @@ class Bot:
 
         # Switch market data type to delayed (Type 3)
         self.ib.reqMarketDataType(3)
-        self.runStrategyLoop()
+
+        # Запуск асинхронной стратегии
+        await self.runStrategyLoop()
         print("end of runStrategyLoop")
-        # time.sleep(1)
-        # Ожидание завершения работы ibThread
+        await asyncio.sleep(1)
         self.isRunning = False
 
     def requestMarketData(self):
         if not self.marketDataRequested:
-            print("Market data reqest. ticker id = ", self.tickerId)
+            print("Market data request. ticker id = ", self.tickerId)
             self.ib.reqMktData(self.tickerId, self.contract, "", False, False, [])
             self.marketDataRequested = True
 
@@ -63,29 +69,26 @@ class Bot:
         order = self.ib.sendOrder(self.contract, action)
         if order:
             self.ib.nextOrderId += 1
-            print("order was placed. Next order id will be ", self.ib.nextOrderId)
+            print("Order was placed. Next order id will be ", self.ib.nextOrderId)
         else:
-            print("failed to place the order.\n")
+            print("Failed to place the order.\n")
 
-    def runLoop(self):
+    async def runLoop(self):
         self.ib.connect("127.0.0.1", 7497, 1)
         while self.isRunning:
             self.ib.run()
         self.ib.disconnect()
         print("end of runLoop")
 
-    def runStrategyLoop(self):
-        # Проверяем, что стратегия установлена
+    async def runStrategyLoop(self):
         if self.strategyId is None:
-            print("Trading strategy doesn't set properly.")
+            print("Trading strategy isn't set properly.")
             return
         while self.isRunning:
             print("\n\nrunStrategyLoop cycle... is running = ", self.isRunning)
-            # Получаем текущую цену бумаги
             self.requestMarketData()
             print("tickerId:", self.tickerId)
             print("nextOrderId:", self.ib.nextOrderId)
-            # current_price = self.ib.price_history
 
             action = self.strat.runStrategy(self.strategyId, self.ib.price_history)
             if action == "BUY":
@@ -97,16 +100,14 @@ class Bot:
             else:
                 print("unresolved action:", action)
             if self.isRunning:
-                time.sleep(2)
+                await asyncio.sleep(3)
             if self.isRunning:
-                time.sleep(2)
-    
+                await asyncio.sleep(3)
 
-    def getAccountData(self):
+    async def getAccountData(self):
         print("getAccountData placeholder")
         info = self.ib.accountSummary(9001, "All", "$LEDGER", "StockValue", "USD")
         print(info)
-        # self.ib.reqAccountSummary(9001, "All", "NetLiquidation,SMA,StockValue")
 
     def stop(self):
         self.isRunning = False  # Останавливаем поток

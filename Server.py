@@ -1,15 +1,19 @@
-import ibapi
-from Bot import Bot
-import socket
-import sys
-import threading
-import time
 import json
+import asyncio
+import websockets
+import threading
+from Bot import Bot
+from BotAsync import BotAsync
+from Test import Test
 
+HOST = '192.168.31.250'
+PORT = 8888
 
-def sendData(s):
+threads = {}
+
+async def send_data(websocket):
     while True:
-
+        # Пример данных для отправки на клиент
         balance = 1000
         activeStrategies = 0
         acceptedStrategies = 0
@@ -22,75 +26,62 @@ def sendData(s):
             "ownStrategies": ownStrategies
         }
         
-        
         jsonString = json.dumps(accountData)
+        await websocket.send(jsonString)
+        await asyncio.sleep(10)
 
-        # Send the JSON through the socket
-        s.send(jsonString.encode())
-        time.sleep(10) 
+async def handle_client(websocket, path):
+    try:
+        async for message in websocket:
+            received_json = json.loads(message)
+            method = received_json["method"]
+            arguments = received_json["arguments"]
 
-HOST = '192.168.56.1'  # my localhost
-PORT = 8888
-threads = {}
+            print("Received JSON:")
+            print("Method:", method)
+            print("Arguments:", arguments)
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print('Socket created')
+            match method:
+                case "startStrategy":
+                    symbol = arguments[0]
+                    strategy = arguments[1]
+                    threadId = arguments[2]
 
-try:
-    s.bind((HOST, PORT))
-except socket.error as err:
-    print('Bind failed!, Error Code:', err)
-    sys.exit()
+                    bot_instance = Bot()
+                    # bot_instance = BotAsync()
+                    # bot_instance = Test()
+                    newThread = threading.Thread(target=bot_instance.createContractAndRunLoop, args=(symbol, strategy, threadId))
+                    print(newThread)
+                    newThread.start()
+                    threads[threadId] = bot_instance
+                    
+                case "askAccountData":
+                    await send_data(websocket)
+                    
+                case "stopStrategy":
+                    threadId = arguments[0]
+                    if threadId in threads:
+                        print("\n\nFound thread to delete: ", threadId)
+                        threadToStop = threads[threadId]
+                        threadToStop.stop()
+                        print(threadToStop)
+                        del threads[threadId]
 
-print('Socket bind success!')
-s.listen(10)
+                case "stopAllStrategies":
+                    for threadId, thread in threads.items():
+                        threadToStop = threads[threadId]
+                        threadToStop.stop()
+                        del threads[threadId]
 
-isRunning = True
+                case _:
+                    print("Unhandled method:", method)
+    except websockets.exceptions.ConnectionClosed as e:
+        print(f"Connection closed: {e}")
 
-connection, client_address = s.accept()
-print('Connection from:', client_address)
-print('Create second thread to send data')
-data_thread = threading.Thread(target=sendData, args=(connection,))
-# data_thread.start()
+async def main():
+    async with websockets.serve(handle_client, HOST, PORT):
+        print(f"WebSocket server started on ws://{HOST}:{PORT}")
+        await asyncio.Future()  # Keeps the server running
 
-print('Socket is now waiting for the connection')
-bot = Bot()
-while True:
-    conn, addr = s.accept()
-    print('Connected with', addr)
-    receivedData = conn.recv(1024).decode()
-    print('Received data:', receivedData)
-    # Deserialize the received JSON string back into a tuple
-    received_json = json.loads(receivedData)
-    method = received_json["method"]
-    arguments = received_json["arguments"]
-
-    print("Deserialize the received JSON:")
-    print("First argument:", method)
-    print("Second argument:", arguments)
-
-    match method:
-            case "startStrategy":
-                symbol = arguments[0]
-                strategy = arguments[1]
-                threadId = arguments[2]
-                newThread = threading.Thread(target=bot.createContractAndRunLoop, args=(symbol,strategy, threadId))
-                newThread.start()
-                threads[threadId] = newThread
-            case "askAccountData":
-                bot.getAccountData()
-            case "stopStrategy":
-                threadId = arguments[0]
-                if threadId in threads:
-                    print("\n\nfound thread to delete\n")
-                    threadToStop = threads[threadId]
-                    del threads[threadId]
-                    threadToStop.join()
-            case "stopAllStrategies":
-                for threadId, thread in threads.items():
-                    thread.join()
-            case _:
-                print("Unhandled method: ", method)
-    
-    conn.close()
-
+# Запуск WebSocket сервера
+asyncio.run(main())
