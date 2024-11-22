@@ -5,9 +5,14 @@ import threading
 from Bot import Bot
 from BotAsync import BotAsync
 from Test import Test
+from IBApi import IBApi
 
 HOST = '192.168.31.250'
 PORT = 8888
+
+ib = IBApi()
+tickerId = 0
+isRunning = True
 
 threads = {}
 
@@ -47,7 +52,7 @@ async def handle_client(websocket, path):
                     strategy = arguments[1]
                     threadId = arguments[2]
 
-                    bot_instance = Bot()
+                    bot_instance = Bot(ib)
                     # bot_instance = BotAsync()
                     # bot_instance = Test()
                     newThread = threading.Thread(target=bot_instance.createContractAndRunLoop, args=(symbol, strategy, threadId))
@@ -78,7 +83,16 @@ async def handle_client(websocket, path):
     except websockets.exceptions.ConnectionClosed as e:
         print(f"Connection closed: {e}")
 
+def runLoop():
+    ib.connect("127.0.0.1", 7497, 1)
+    while isRunning:
+        ib.run()
+    ib.disconnect()
+
 async def main():
+    ibThread = threading.Thread(target=runLoop, daemon=True)
+    ibThread.start()
+    await asyncio.sleep(1)
     async with websockets.serve(handle_client, HOST, PORT):
         print(f"WebSocket server started on ws://{HOST}:{PORT}")
         await asyncio.Future()  # Keeps the server running

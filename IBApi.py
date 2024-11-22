@@ -4,10 +4,15 @@ from ibapi.contract import Contract
 from ibapi.order import Order
 
 class IBApi(EWrapper, EClient):
-    def __init__(self, bot):
+    # def __init__(self, bot):
+    #     EClient.__init__(self, self)
+    #     self.is_connected = False
+    #     self.bot = bot
+    #     self.price_history = []
+
+    def __init__(self):
         EClient.__init__(self, self)
         self.is_connected = False
-        self.bot = bot
         self.price_history = []
 
     def connect(self, host, port, clientId):
@@ -25,7 +30,7 @@ class IBApi(EWrapper, EClient):
     def tickPrice(self, reqId, tickType, price, attrib):
         super().tickPrice(reqId, tickType, price, attrib)
         if tickType == 4:  # 4 corresponds to "Last Price" tick type
-            self.bot.onPriceUpdate(price)
+            # self.bot.onPriceUpdate(price)
             self.price_history.append(price)
 
     def nextValidId(self, orderId: int):

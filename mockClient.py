@@ -16,36 +16,40 @@ async def test_client():
             "arguments": ["AAPL", "1", "9902"]
         }
         await websocket.send(json.dumps(start_message_1))
+        print(start_message_1)
         print("Sent startStrategy command for strategy 9902")
 
         await asyncio.sleep(5)
 
-        # Отправляем команду "stopStrategy" для первой стратегии
-        stop_message_1 = {
-            "method": "stopStrategy",
-            "arguments": ["9902"]
-        }
-        await websocket.send(json.dumps(stop_message_1))
-        print("Sent stopStrategy command for strategy 9902")
+        # # Отправляем вторую команду "startStrategy"
+        # start_message_2 = {
+        #     "method": "startStrategy",
+        #     "arguments": ["AAPL", "2", "9903"]
+        # }
+        # await websocket.send(json.dumps(start_message_2))
+        # print("Sent startStrategy command for strategy 9903")
 
-        await asyncio.sleep(10)
+        # await asyncio.sleep(5)
 
-        # Отправляем вторую команду "startStrategy"
-        start_message_2 = {
-            "method": "startStrategy",
-            "arguments": ["AAPL", "2", "9903"]
-        }
-        await websocket.send(json.dumps(start_message_2))
-        print("Sent startStrategy command for strategy 9903")
-        await asyncio.sleep(5)
+
+        # # Отправляем команду "stopStrategy" для первой стратегии
+        # stop_message_1 = {
+        #     "method": "stopStrategy",
+        #     "arguments": ["9903"]
+        # }
+        # await websocket.send(json.dumps(stop_message_1))
+        # print("Sent stopStrategy command for strategy 9903")
+
+        # await asyncio.sleep(10)
 
         # Отправляем команду "stopStrategy" для второй стратегии
         stop_message_2 = {
             "method": "stopStrategy",
-            "arguments": ["9903"]
+            "arguments": ["9902"]
         }
         await websocket.send(json.dumps(stop_message_2))
-        print("Sent stopStrategy command for strategy 9903")
+        print("Sent stopStrategy command for strategy 9902")
+        print(stop_message_2)
 
 
 

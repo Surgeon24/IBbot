@@ -8,24 +8,23 @@ class Bot:
     ib = None
     strat = None
     marketDataRequested = False
-    position = 0  # Initial position is flat
     tickerId = 0
     symbol = ""
     isRunning = False
 
-    def __init__(self):
-        self.ib = IBApi(self)
+    def __init__(self, ib):
+        # self.ib = IBApi(self)
         self.strat = StrategyAdapter()
-        self.ib.nextOrderId = None
         self.isRunning = True
+        self.ib = ib
+
         # ibThread = threading.Thread(target=self.runLoop, daemon=True)
         # ibThread.start()
         # time.sleep(1)
         
         print("_init_")
         while self.isRunning:
-            if isinstance(self.ib.nextOrderId, int):
-                print('connected')
+            if isinstance(ib.nextOrderId, int):
                 break
             else:
                 print('waiting for connection (there is no nextOrderId)')
@@ -44,10 +43,9 @@ class Bot:
         # Switch market data type to delayed (Type 3)
         self.ib.reqMarketDataType(3)
         self.runStrategyLoop()
-        print("end of runStrategyLoop")
-        # time.sleep(1)
-        # Ожидание завершения работы ibThread
         self.isRunning = False
+        print("end of createContractAndRunLoop")
+        
 
     def requestMarketData(self):
         if not self.marketDataRequested:
@@ -67,12 +65,12 @@ class Bot:
         else:
             print("failed to place the order.\n")
 
-    def runLoop(self):
-        self.ib.connect("127.0.0.1", 7497, 1)
-        while self.isRunning:
-            self.ib.run()
-        self.ib.disconnect()
-        print("end of runLoop")
+    # def runLoop(self):
+    #     self.ib.connect("127.0.0.1", 7497, 1)
+    #     while self.isRunning:
+    #         self.ib.run()
+    #     self.ib.disconnect()
+    #     print("end of runLoop")
 
     def runStrategyLoop(self):
         # Проверяем, что стратегия установлена
@@ -85,8 +83,9 @@ class Bot:
             self.requestMarketData()
             print("tickerId:", self.tickerId)
             print("nextOrderId:", self.ib.nextOrderId)
-            # current_price = self.ib.price_history
-
+            current_price = self.ib.price_history
+            print("current price: ", current_price)
+            
             action = self.strat.runStrategy(self.strategyId, self.ib.price_history)
             if action == "BUY":
                 self.sendOrder("BUY")
@@ -96,8 +95,6 @@ class Bot:
                 print("action HOLD was received. No order was placed.")
             else:
                 print("unresolved action:", action)
-            if self.isRunning:
-                time.sleep(2)
             if self.isRunning:
                 time.sleep(2)
     
