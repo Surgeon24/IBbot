@@ -1,6 +1,4 @@
-import threading
 import time
-import _asyncio
 from IBApi import IBApi
 from Strategies import StrategyAdapter
 
@@ -64,13 +62,6 @@ class Bot:
             print("order was placed. Next order id will be ", self.ib.nextOrderId)
         else:
             print("failed to place the order.\n")
-
-    # def runLoop(self):
-    #     self.ib.connect("127.0.0.1", 7497, 1)
-    #     while self.isRunning:
-    #         self.ib.run()
-    #     self.ib.disconnect()
-    #     print("end of runLoop")
 
     def runStrategyLoop(self):
         # Проверяем, что стратегия установлена

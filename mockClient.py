@@ -1,87 +1,84 @@
 import asyncio
 import websockets
 import json
-import time
+
 HOST = '192.168.31.250'
 PORT = '8888'
 
+async def send_messages(websocket):
+    """Отправка сообщений на сервер."""
+
+    m = {
+        "method": "askAccountData",
+        "arguments": []
+    }
+    await websocket.send(json.dumps(m))
+    print(f"Sent: {m}")
+    
+
+    # m = {
+    #     "method": "startStrategy",
+    #     "arguments": ["AAPL", "1", "8801"]
+    # }
+    # await websocket.send(json.dumps(m))
+    # print(f"Sent: {m}")
+
+    # await asyncio.sleep(5)
+
+    # m = {
+    #     "method": "startStrategy",
+    #     "arguments": ["AAPL", "2", "8802"]
+    # }
+    # await websocket.send(json.dumps(m))
+    # print(f"Sent: {m}")
+
+    # await asyncio.sleep(3)
+
+    # m = {
+    #     "method": "botList",
+    #     "arguments": []
+    # }
+    # await websocket.send(json.dumps(m))
+    # print(f"Sent: {m}")
+
+    # await asyncio.sleep(5)
+
+    # m = {
+    #     "method": "stopStrategy",
+    #     "arguments": ["8801"]
+    # }
+    # await websocket.send(json.dumps(m))
+    # print(f"Sent: {m}")
+
+    # await asyncio.sleep(3)
+
+    # m = {
+    #     "method": "stopStrategy",
+    #     "arguments": ["8802"]
+    # }
+    # await websocket.send(json.dumps(m))
+    # print(f"Sent: {m}")
+
+async def receive_messages(websocket):
+    """Получение сообщений от сервера."""
+    try:
+        async for message in websocket:
+            print(f"Received: {message}")
+    except websockets.ConnectionClosed:
+        print("Connection closed by server")
 
 async def test_client():
-    uri = "ws://192.168.31.250:8888"  # Замените на актуальный адрес вашего сервера
+    uri = f"ws://{HOST}:{PORT}"  # Замените на актуальный адрес вашего сервера
 
     async with websockets.connect(uri) as websocket:
-        # Отправляем первую команду "startStrategy"
-        start_message_1 = {
-            "method": "startStrategy",
-            "arguments": ["AAPL", "1", "9902"]
-        }
-        await websocket.send(json.dumps(start_message_1))
-        print(start_message_1)
-        print("Sent startStrategy command for strategy 9902")
+        # Запуск отправки и приёма сообщений параллельно
+        send_task = asyncio.create_task(send_messages(websocket))
+        receive_task = asyncio.create_task(receive_messages(websocket))
 
-        await asyncio.sleep(5)
-
-        # # Отправляем вторую команду "startStrategy"
-        # start_message_2 = {
-        #     "method": "startStrategy",
-        #     "arguments": ["AAPL", "2", "9903"]
-        # }
-        # await websocket.send(json.dumps(start_message_2))
-        # print("Sent startStrategy command for strategy 9903")
-
-        # await asyncio.sleep(5)
-
-
-        # # Отправляем команду "stopStrategy" для первой стратегии
-        # stop_message_1 = {
-        #     "method": "stopStrategy",
-        #     "arguments": ["9903"]
-        # }
-        # await websocket.send(json.dumps(stop_message_1))
-        # print("Sent stopStrategy command for strategy 9903")
-
-        # await asyncio.sleep(10)
-
-        # Отправляем команду "stopStrategy" для второй стратегии
-        stop_message_2 = {
-            "method": "stopStrategy",
-            "arguments": ["9902"]
-        }
-        await websocket.send(json.dumps(stop_message_2))
-        print("Sent stopStrategy command for strategy 9902")
-        print(stop_message_2)
-
-
-
-async def test_client_2():
-    uri = "ws://192.168.31.250:8888"  # Замените на актуальный адрес вашего сервера
-
-    async with websockets.connect(uri) as websocket:
-        start_message = {"action": "start"}
-        await websocket.send(json.dumps(start_message))
-        print("Sent start")
-        await asyncio.sleep(3)
-
-        stop_message = {"action": "stop"}
-        await websocket.send(json.dumps(stop_message))
-        print("Sent stop")
-        await asyncio.sleep(3)
-
-        await websocket.send(json.dumps(stop_message))
-        print("Sent stop again")
-        await asyncio.sleep(3)
-
-        await websocket.send(json.dumps(start_message))
-        print("Sent start again")
-        await asyncio.sleep(3)
-
-        await websocket.send(json.dumps(stop_message))
-        print("Sent stop again")
-        await asyncio.sleep(3)
-
-
-
+        # Дожидаемся завершения задач
+        await asyncio.gather(send_task, receive_task)
 
 # Запуск тестового клиента
 asyncio.run(test_client())
+
 

@@ -2,38 +2,20 @@ import json
 import asyncio
 import websockets
 import threading
+from threading import Timer
 from Bot import Bot
-from BotAsync import BotAsync
-from Test import Test
 from IBApi import IBApi
+from Data import Data
 
 HOST = '192.168.31.250'
 PORT = 8888
 
 ib = IBApi()
+data = Data()
 tickerId = 0
 isRunning = True
 
 threads = {}
-
-async def send_data(websocket):
-    while True:
-        # Пример данных для отправки на клиент
-        balance = 1000
-        activeStrategies = 0
-        acceptedStrategies = 0
-        ownStrategies = 0
-
-        accountData = {
-            "balance": balance,
-            "activeStrategies": activeStrategies,
-            "acceptedStrategies": acceptedStrategies,
-            "ownStrategies": ownStrategies
-        }
-        
-        jsonString = json.dumps(accountData)
-        await websocket.send(jsonString)
-        await asyncio.sleep(10)
 
 async def handle_client(websocket, path):
     try:
@@ -53,15 +35,19 @@ async def handle_client(websocket, path):
                     threadId = arguments[2]
 
                     bot_instance = Bot(ib)
-                    # bot_instance = BotAsync()
-                    # bot_instance = Test()
                     newThread = threading.Thread(target=bot_instance.createContractAndRunLoop, args=(symbol, strategy, threadId))
                     print(newThread)
                     newThread.start()
                     threads[threadId] = bot_instance
-                    
+                    data.add_bot(threadId, symbol, strategy)
+
+
+                case "botList":
+                    print("\nbotList recieved!\n")
+                    await data.send_bots_data(websocket)
+
                 case "askAccountData":
-                    await send_data(websocket)
+                    await data.send_account_data(websocket, ib)
                     
                 case "stopStrategy":
                     threadId = arguments[0]
@@ -71,12 +57,14 @@ async def handle_client(websocket, path):
                         threadToStop.stop()
                         print(threadToStop)
                         del threads[threadId]
+                        data.remove_bot(threadId)
 
                 case "stopAllStrategies":
-                    for threadId, thread in threads.items():
-                        threadToStop = threads[threadId]
-                        threadToStop.stop()
-                        del threads[threadId]
+                    for thread in threads.values():
+                        thread.stop()
+                    threads.clear()
+                    data.remove_all_bots()
+
 
                 case _:
                     print("Unhandled method:", method)
@@ -85,6 +73,7 @@ async def handle_client(websocket, path):
 
 def runLoop():
     ib.connect("127.0.0.1", 7497, 1)
+    Timer(20, ib.stop).start()
     while isRunning:
         ib.run()
     ib.disconnect()
