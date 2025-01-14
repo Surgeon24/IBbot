@@ -19,7 +19,7 @@ async def test_client():
         print(start_message_1)
         print("Sent startStrategy command for strategy 9902")
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(30)
 
         # # Отправляем вторую команду "startStrategy"
         # start_message_2 = {
