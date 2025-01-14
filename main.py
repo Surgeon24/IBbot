@@ -1,7 +1,4 @@
-# import ibapi
-# from Bot import Bot
 from Server import Server
 
-# Start the Bot 
-# bot = Bot()
+# Start the Server
 server = Server()

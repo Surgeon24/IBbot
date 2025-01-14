@@ -25,6 +25,7 @@ class IBApi(EWrapper, EClient):
 
     def tickPrice(self, reqId, tickType, price, attrib):
         super().tickPrice(reqId, tickType, price, attrib)
+        print("\n\ntickPrice \n\n")
         if tickType == 4:  # 4 corresponds to "Last Price" tick type
             self.price_history.append(price)
 
@@ -40,6 +41,7 @@ class IBApi(EWrapper, EClient):
         contract.secType = "STK"
         contract.exchange = "SMART"
         contract.currency = "USD"
+        print("contract created! symbol: ", symbol)
         return contract
 
     def sendOrder(self, contract, action):
@@ -56,7 +58,7 @@ class IBApi(EWrapper, EClient):
     
     def get_currency_balances(self):
         return self.currency_balances
-#######################################
+
     def updatePortfolio(self, contract: Contract, position: float, marketPrice: float, marketValue: float,
                         averageCost: float, unrealizedPNL: float, realizedPNL: float, accountName: str):
         if contract.secType == "STK":  # Только акции

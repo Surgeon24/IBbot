@@ -8,13 +8,15 @@ class Bot:
     marketDataRequested = False
     tickerId = 0
     symbol = ""
+    params = {}
     isRunning = False
 
-    def __init__(self, ib):
+    def __init__(self, ib, params):
         # self.ib = IBApi(self)
         self.strat = StrategyAdapter()
         self.isRunning = True
         self.ib = ib
+        self.params = params
 
         # ibThread = threading.Thread(target=self.runLoop, daemon=True)
         # ibThread.start()
@@ -49,6 +51,7 @@ class Bot:
         if not self.marketDataRequested:
             print("Market data reqest. ticker id = ", self.tickerId)
             self.ib.reqMktData(self.tickerId, self.contract, "", False, False, [])
+
             self.marketDataRequested = True
 
     def onPriceUpdate(self, price):
@@ -70,19 +73,21 @@ class Bot:
             return
         while self.isRunning:
             print("\n\nrunStrategyLoop cycle... is running = ", self.isRunning)
-            # Получаем текущую цену бумаги
+            self.tickerId += 1
             self.requestMarketData()
             print("tickerId:", self.tickerId)
             print("nextOrderId:", self.ib.nextOrderId)
             current_price = self.ib.price_history
             print("current price: ", current_price)
+
             
-            action = self.strat.runStrategy(self.strategyId, self.ib.price_history)
+            action = self.strat.runStrategy(self.strategyId, self.ib.price_history, self.params)
             if action == "BUY":
                 self.sendOrder("BUY")
             elif action == "SELL":
                 self.sendOrder("SELL")
             elif action == "HOLD":
+                self.sendOrder("SELL")
                 print("action HOLD was received. No order was placed.")
             else:
                 print("unresolved action:", action)

@@ -15,15 +15,16 @@ async def send_messages(websocket):
     await websocket.send(json.dumps(m))
     print(f"Sent: {m}")
     
+    await asyncio.sleep(2)
 
-    # m = {
-    #     "method": "startStrategy",
-    #     "arguments": ["AAPL", "1", "8801"]
-    # }
-    # await websocket.send(json.dumps(m))
-    # print(f"Sent: {m}")
+    m = {
+        "method": "startStrategy",
+        "arguments": ["AAPL", "1", "8801"]
+    }
+    await websocket.send(json.dumps(m))
+    print(f"Sent: {m}")
 
-    # await asyncio.sleep(5)
+    await asyncio.sleep(190)
 
     # m = {
     #     "method": "startStrategy",
@@ -43,12 +44,12 @@ async def send_messages(websocket):
 
     # await asyncio.sleep(5)
 
-    # m = {
-    #     "method": "stopStrategy",
-    #     "arguments": ["8801"]
-    # }
-    # await websocket.send(json.dumps(m))
-    # print(f"Sent: {m}")
+    m = {
+        "method": "stopStrategy",
+        "arguments": ["8801"]
+    }
+    await websocket.send(json.dumps(m))
+    print(f"Sent: {m}")
 
     # await asyncio.sleep(3)
 
@@ -69,7 +70,7 @@ async def receive_messages(websocket):
 
 async def test_client():
     uri = f"ws://{HOST}:{PORT}"  # Замените на актуальный адрес вашего сервера
-
+    print("starting test_client")
     async with websockets.connect(uri) as websocket:
         # Запуск отправки и приёма сообщений параллельно
         send_task = asyncio.create_task(send_messages(websocket))
@@ -79,6 +80,8 @@ async def test_client():
         await asyncio.gather(send_task, receive_task)
 
 # Запуск тестового клиента
-asyncio.run(test_client())
-
+print("starting")
+# asyncio.run(test_client())
+uri = f"ws://{HOST}:{PORT}"
+send_messages(uri)
 

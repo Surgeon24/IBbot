@@ -8,6 +8,7 @@ from IBApi import IBApi
 from Data import Data
 
 HOST = '192.168.31.250'
+# HOST = '192.168.43.38'
 PORT = 8888
 
 ib = IBApi()
@@ -33,8 +34,9 @@ async def handle_client(websocket, path):
                     symbol = arguments[0]
                     strategy = arguments[1]
                     threadId = arguments[2]
+                    params = arguments[3]
 
-                    bot_instance = Bot(ib)
+                    bot_instance = Bot(ib, params)
                     newThread = threading.Thread(target=bot_instance.createContractAndRunLoop, args=(symbol, strategy, threadId))
                     print(newThread)
                     newThread.start()
@@ -72,7 +74,8 @@ async def handle_client(websocket, path):
         print(f"Connection closed: {e}")
 
 def runLoop():
-    ib.connect("127.0.0.1", 7497, 1)
+    ib.connect("127.0.0.1", 7497, 999)
+    # ib.connect("127.0.0.1", 4002, 1)
     Timer(20, ib.stop).start()
     while isRunning:
         ib.run()
