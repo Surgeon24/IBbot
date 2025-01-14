@@ -19,12 +19,12 @@ async def send_messages(websocket):
 
     m = {
         "method": "startStrategy",
-        "arguments": ["AAPL", "1", "8801"]
+        "arguments": ["AAPL", "1", "8801", {"sma_length": 11}]
     }
     await websocket.send(json.dumps(m))
     print(f"Sent: {m}")
 
-    await asyncio.sleep(190)
+    await asyncio.sleep(120)
 
     # m = {
     #     "method": "startStrategy",
@@ -81,7 +81,5 @@ async def test_client():
 
 # Запуск тестового клиента
 print("starting")
-# asyncio.run(test_client())
-uri = f"ws://{HOST}:{PORT}"
-send_messages(uri)
+asyncio.run(test_client())
 

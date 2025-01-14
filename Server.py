@@ -74,9 +74,8 @@ async def handle_client(websocket, path):
         print(f"Connection closed: {e}")
 
 def runLoop():
-    ib.connect("127.0.0.1", 7497, 999)
+    ib.connect("127.0.0.1", 7497, 1)
     # ib.connect("127.0.0.1", 4002, 1)
-    Timer(20, ib.stop).start()
     while isRunning:
         ib.run()
     ib.disconnect()

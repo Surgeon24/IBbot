@@ -25,7 +25,6 @@ class IBApi(EWrapper, EClient):
 
     def tickPrice(self, reqId, tickType, price, attrib):
         super().tickPrice(reqId, tickType, price, attrib)
-        print("\n\ntickPrice \n\n")
         if tickType == 4:  # 4 corresponds to "Last Price" tick type
             self.price_history.append(price)
 

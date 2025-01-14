@@ -22,14 +22,12 @@ class Bot:
         # ibThread.start()
         # time.sleep(1)
         
-        print("_init_")
         while self.isRunning:
             if isinstance(ib.nextOrderId, int):
                 break
             else:
                 print('waiting for connection (there is no nextOrderId)')
                 time.sleep(2)
-        print("end of _init_")
 
 
     def createContractAndRunLoop(self, symbol, strategy, id):
@@ -75,10 +73,10 @@ class Bot:
             print("\n\nrunStrategyLoop cycle... is running = ", self.isRunning)
             self.tickerId += 1
             self.requestMarketData()
-            print("tickerId:", self.tickerId)
-            print("nextOrderId:", self.ib.nextOrderId)
+            print("Bot is running. Ticker id:", self.tickerId)
+            print("next order id:", self.ib.nextOrderId)
             current_price = self.ib.price_history
-            print("current price: ", current_price)
+            print("list of the last prices: ", current_price)
 
             
             action = self.strat.runStrategy(self.strategyId, self.ib.price_history, self.params)
@@ -87,7 +85,6 @@ class Bot:
             elif action == "SELL":
                 self.sendOrder("SELL")
             elif action == "HOLD":
-                self.sendOrder("SELL")
                 print("action HOLD was received. No order was placed.")
             else:
                 print("unresolved action:", action)

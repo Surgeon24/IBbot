@@ -18,7 +18,7 @@ class StrategyAdapter:
     adx_length = 14
 
     def runStrategy(self, id, price_history, params):
-        print("strat:", id)
+        print("strategy id:", id)
         self.update_params(params)
         match id:
             case '1':
