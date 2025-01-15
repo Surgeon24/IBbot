@@ -10,6 +10,7 @@ class Bot:
     symbol = ""
     params = {}
     isRunning = False
+    timeChart = 5
 
     def __init__(self, ib, params):
         # self.ib = IBApi(self)
@@ -17,6 +18,7 @@ class Bot:
         self.isRunning = True
         self.ib = ib
         self.params = params
+        self.updateTime(params)
 
         # ibThread = threading.Thread(target=self.runLoop, daemon=True)
         # ibThread.start()
@@ -29,6 +31,12 @@ class Bot:
                 print('waiting for connection (there is no nextOrderId)')
                 time.sleep(2)
 
+    def updateTime(self, params):
+        print("updateTime")
+        for key, value in params.items():
+            if hasattr(self, key):
+                print("found: ", key, " with value: ", value)
+                setattr(self, key, value)
 
     def createContractAndRunLoop(self, symbol, strategy, id):
         # Create IB contract object
@@ -70,11 +78,12 @@ class Bot:
             print("Trading strategy doesn't set properly.")
             return
         while self.isRunning:
-            print("\n\nrunStrategyLoop cycle... is running = ", self.isRunning)
             self.tickerId += 1
+            if self.tickerId > 99999:
+                self.tickerId = 1
             self.requestMarketData()
-            print("Bot is running. Ticker id:", self.tickerId)
-            print("next order id:", self.ib.nextOrderId)
+            print("Ticker id:", self.tickerId)
+            print("Next order id:", self.ib.nextOrderId)
             current_price = self.ib.price_history
             print("list of the last prices: ", current_price)
 
@@ -89,7 +98,7 @@ class Bot:
             else:
                 print("unresolved action:", action)
             if self.isRunning:
-                time.sleep(2)
+                time.sleep(self.timeChart)
     
 
     def getAccountData(self):

@@ -18,7 +18,7 @@ class StrategyAdapter:
     adx_length = 14
 
     def runStrategy(self, id, price_history, params):
-        print("strategy id:", id)
+        print("Strategy id:", id)
         self.update_params(params)
         match id:
             case '1':
@@ -32,8 +32,6 @@ class StrategyAdapter:
         for key, value in params.items():
             if hasattr(self, key):
                 setattr(self, key, value)
-            else:
-                print(f"Warning: {key} is not a recognized parameter.")
 
     def sma(data, length):
         """Вычисляет простую скользящую среднюю (SMA)."""
@@ -92,7 +90,7 @@ class StrategyAdapter:
         return ema_values
 
                                                     # strategies
-    def sma_strategy(self, price_history, sma_length=14):
+    def sma_strategy(self, price_history):
         """
         Торговая стратегия на основе простой скользящей средней (SMA).
         
@@ -101,12 +99,12 @@ class StrategyAdapter:
         return: Сигнал "BUY", "SELL" или "HOLD".
         """
         # Проверяем, достаточно ли данных для расчета SMA
-        if len(price_history) < sma_length:
-            print(f"Not enough data: {len(price_history)} / {sma_length}")
+        if len(price_history) < self.sma_length:
+            print(f"Not enough data: {len(price_history)} / {self.sma_length}")
             return "HOLD"
         
         # Вычисляем SMA как среднее последних `sma_length` цен
-        sma_value = sum(price_history[-sma_length:]) / sma_length
+        sma_value = sum(price_history[-self.sma_length:]) / self.sma_length
         
         # Сравниваем последнюю цену с SMA
         last_price = price_history[-1]
@@ -138,24 +136,22 @@ class StrategyAdapter:
     #         return "SELL"
     #     return "HOLD"
 
-    def investing_strategy(price_history, sma_length_fast=9, sma_length_slow=21, 
-                rsi_length=14, rsi_neutral=20, 
-                macd_fast=12, macd_slow=26, macd_signal=9):
+    def investing_strategy(self, price_history, rsi_neutral=20, macd_signal=9):
         """
         Торговая стратегия с использованием SMA, RSI и MACD.
         
         :param price_history: Список цен закрытия.
         :return: Сигнал "BUY", "SELL", "CLOSE_LONG", "CLOSE_SHORT" или "HOLD".
         """
-        if len(price_history) < max(sma_length_slow, rsi_length, macd_slow + macd_signal - 1):
-            print("Недостаточно данных для расчета всех индикаторов.")
+        if len(price_history) < max(self.sma_length_slow, self.rsi_length, self.macd_slow + macd_signal - 1):
+            print(f"Not enough data")
             return "HOLD"
         
         # Вычисление индикаторов
-        sma_fast = sma(price_history, sma_length_fast)
-        sma_slow = sma(price_history, sma_length_slow)
-        rsi_value = rsi(price_history, rsi_length)
-        macd_line, signal_line = macd(price_history, macd_fast, macd_slow, macd_signal)
+        sma_fast = self.sma(price_history, self.sma_length_fast)
+        sma_slow = self.sma(price_history, self.sma_length_slow)
+        rsi_value = self.rsi(price_history, self.rsi_length)
+        macd_line, signal_line = self.macd(price_history, self.macd_fast, self.macd_slow, macd_signal)
 
         # Условия длинной позиции
         if sma_fast and sma_slow and rsi_value and macd_line and signal_line:
@@ -248,11 +244,7 @@ class StrategyAdapter:
     #     signal_line = np.mean(data[-signal_length:])
     #     return macd_line, signal_line
 
-    def adx_strategy(price_history, volumes, 
-                                sma_length_fast=9, sma_length_slow=21,
-                                rsi_length=14, rsi_overbought=70, rsi_oversold=30, 
-                                macd_fast=12, macd_slow=26, macd_signal=9,
-                                adx_length=14, adx_threshold=25, min_volume=1000, window_size=14):
+    def adx_strategy(self, price_history, volumes, rsi_overbought=70, rsi_oversold=30, macd_signal=9, adx_threshold=25, min_volume=1000, window_size=14):
         """
         Торговая стратегия с использованием SMA, RSI, MACD и ADX.
         
@@ -261,18 +253,18 @@ class StrategyAdapter:
         :param window_size: Размер окна для вычисления high/low.
         :return: Сигнал "BUY", "SELL", "CLOSE_LONG", "CLOSE_SHORT" или "HOLD".
         """
-        if len(price_history) < max(sma_length_slow, rsi_length, macd_slow + macd_signal - 1, adx_length):
-            print("Недостаточно данных для расчета всех индикаторов.")
+        if len(price_history) < max(self.sma_length_slow, self.rsi_length, self.macd_slow + macd_signal - 1, self.adx_length):
+            print(f"Not enough data")
             return "HOLD"
         
         # Вычисление индикаторов
-        sma_fast = sma(price_history, sma_length_fast)
-        sma_slow = sma(price_history, sma_length_slow)
-        rsi_value = rsi(price_history, rsi_length)
-        macd_line, signal_line = macd(price_history, macd_fast, macd_slow, macd_signal)
+        sma_fast = self.sma(price_history, self.sma_length_fast)
+        sma_slow = self.sma(price_history, self.sma_length_slow)
+        rsi_value = self.rsi(price_history, self.rsi_length)
+        macd_line, signal_line = self.macd(price_history, self.macd_fast, self.macd_slow, macd_signal)
         high_prices = [max(price_history[max(0, i - window_size):i + 1]) for i in range(len(price_history))]
         low_prices = [min(price_history[max(0, i - window_size):i + 1]) for i in range(len(price_history))]
-        adx_value = adx(high_prices, low_prices, price_history, adx_length)
+        adx_value = self.adx(high_prices, low_prices, price_history, self.adx_length)
         current_volume = volumes[-1]
 
         # Проверка условий

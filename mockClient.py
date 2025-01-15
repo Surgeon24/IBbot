@@ -19,7 +19,7 @@ async def send_messages(websocket):
 
     m = {
         "method": "startStrategy",
-        "arguments": ["AAPL", "1", "8801", {"sma_length": 11}]
+        "arguments": ["AAPL", "1", "8801", {"sma_length": 11, "timeChart": 8}]
     }
     await websocket.send(json.dumps(m))
     print(f"Sent: {m}")
