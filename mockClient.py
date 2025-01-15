@@ -69,7 +69,7 @@ async def receive_messages(websocket):
         print("Connection closed by server")
 
 async def test_client():
-    uri = f"ws://{HOST}:{PORT}"  # Замените на актуальный адрес вашего сервера
+    uri = f"ws://{HOST}:{PORT}"
     print("starting test_client")
     async with websockets.connect(uri) as websocket:
         # Запуск отправки и приёма сообщений параллельно

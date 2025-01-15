@@ -39,14 +39,3 @@ class Data:
         }
         await websocket.send(json.dumps(account_data))
 
-    # def updatePortfolio(self, contract: Contract, position: float, marketPrice: float, marketValue: float,
-    #                     averageCost: float, unrealizedPNL: float, realizedPNL: float, accountName: str):
-    #     print(f"Portfolio - Symbol: {contract.symbol}, Position: {position}, "
-    #             f"MarketPrice: {marketPrice}, MarketValue: {marketValue}, AverageCost: {averageCost}")
-    #     account_stocks[contract.symbol] = {"position": position, "marketPrice": marketPrice, "marketValue": marketValue, "averageCost": averageCost}
-
-    # def updateAccountValue(self, key: str, val: str, currency: str, accountName: str):
-    #     if key in ["NetLiquidation", "CashBalance"]:  # Интересующие ключи
-    #         print(f"Account Value - {key}: {val} {currency}")
-    #         account_value[currency] = {"value": val}
-

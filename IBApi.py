@@ -60,17 +60,17 @@ class IBApi(EWrapper, EClient):
 
     def updatePortfolio(self, contract: Contract, position: float, marketPrice: float, marketValue: float,
                         averageCost: float, unrealizedPNL: float, realizedPNL: float, accountName: str):
-        if contract.secType == "STK":  # Только акции
+        if contract.secType == "STK":  # only stocks
             print(f"Portfolio - Symbol: {contract.symbol}, Position: {position}, "
                   f"MarketPrice: {marketPrice}, MarketValue: {marketValue}, AverageCost: {averageCost}")
 
     def updateAccountValue(self, key: str, val: str, currency: str, accountName: str):
-        if key in ["CashBalance"]:  # Интересующие ключи
+        if key in ["CashBalance"]:
             print(f"Account Value - {key}: {val} {currency}")
             self.currency_balances[currency] = {"value": val}
 
     def updateAccountTime(self, timeStamp: str):
-        pass  # Если не нужно, оставляем пустым
+        pass
 
     def accountDownloadEnd(self, accountName: str):
         print(f"Account Download Complete for {accountName}")

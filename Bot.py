@@ -19,10 +19,6 @@ class Bot:
         self.ib = ib
         self.params = params
         self.updateTime(params)
-
-        # ibThread = threading.Thread(target=self.runLoop, daemon=True)
-        # ibThread.start()
-        # time.sleep(1)
         
         while self.isRunning:
             if isinstance(ib.nextOrderId, int):
@@ -73,7 +69,6 @@ class Bot:
             print("failed to place the order.\n")
 
     def runStrategyLoop(self):
-        # Проверяем, что стратегия установлена
         if self.strategyId is None:
             print("Trading strategy doesn't set properly.")
             return
@@ -105,7 +100,6 @@ class Bot:
         print("getAccountData placeholder")
         info = self.ib.accountSummary(9001, "All", "$LEDGER", "StockValue", "USD")
         print(info)
-        # self.ib.reqAccountSummary(9001, "All", "NetLiquidation,SMA,StockValue")
 
     def stop(self):
         self.isRunning = False  # Останавливаем поток
